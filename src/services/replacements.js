@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase'
 
-const selection = '*, replacement_recipients(*)'
+const selection = '*, replacement_recipients!replacement_recipients_replacement_id_fkey(*)'
 
 export async function listReplacements() {
   const { data, error } = await supabase.from('replacement_requests').select(selection).order('created_at', { ascending: false })
