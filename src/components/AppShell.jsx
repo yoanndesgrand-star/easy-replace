@@ -5,6 +5,7 @@ const links = [
   ['replacement', 'Nouveau remplacement', '+'],
   ['replacements', 'Remplacements', '◷'],
   ['activity', 'Activité', '≋'],
+  ['subscription', 'Abonnement', '◈'],
   ['settings', 'Paramètres', '⚙'],
 ]
 

@@ -10,6 +10,7 @@ import ReplacementsPage from './pages/ReplacementsPage'
 import ReplacementDetails from './pages/ReplacementDetails'
 import ActivityPage from './pages/ActivityPage'
 import SettingsPage from './pages/SettingsPage'
+import SubscriptionPage from './pages/SubscriptionPage'
 import LocationsPage from './pages/LocationsPage'
 import EditReplacementPage from './pages/EditReplacementPage'
 import CoachResponsePage from './pages/CoachResponsePage'
@@ -18,6 +19,7 @@ import * as replacementService from './services/replacements'
 import * as settingsService from './services/settings'
 import * as locationService from './services/locations'
 import * as organizationService from './services/organizations'
+import * as subscriptionService from './services/subscriptions'
 
 export default function App() {
   const publicToken = window.location.pathname.match(/^\/r\/([0-9a-f-]{36})\/?$/i)?.[1] || null
@@ -30,6 +32,7 @@ export default function App() {
   const [replacements, setReplacements] = useState([])
   const [settings, setSettings] = useState(settingsService.defaultSettings)
   const [locations, setLocations] = useState([])
+  const [subscription, setSubscription] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -49,9 +52,9 @@ export default function App() {
   async function reload() {
     try {
       await organizationService.ensureOrganization()
-      const [locationData, requestData, settingsData] = await Promise.all([locationService.listLocations(), replacementService.listReplacements(), settingsService.getSettings()])
+      const [locationData, requestData, settingsData, subscriptionData] = await Promise.all([locationService.listLocations(), replacementService.listReplacements(), settingsService.getSettings(), subscriptionService.getSubscriptionOverview()])
       const coachData = await coachService.listCoaches()
-      setLocations(locationData); setCoaches(coachData); setReplacements(requestData); setSettings(settingsData)
+      setLocations(locationData); setCoaches(coachData); setReplacements(requestData); setSettings(settingsData); setSubscription(subscriptionData)
     } catch (err) { setError(err.message) }
   }
   useEffect(() => { if (session && !recovery) reload() }, [session, recovery])
@@ -68,6 +71,11 @@ export default function App() {
   function navigate(next, data = null) { setPage(next); setPayload(data); window.scrollTo(0, 0) }
   async function saveCoach(value) { await coachService.saveCoach(value); await reload() }
   async function send(form, selected, message) {
+    const previewSegments = subscriptionService.estimateSmsSegments(`${message}\nRépondre : ${window.location.origin}/r/00000000-0000-0000-0000-000000000000`)
+    const needed = previewSegments * selected.length
+    if (subscription && needed > Number(subscription.remaining_segments)) {
+      throw new Error(`Quota SMS insuffisant : cet envoi nécessite environ ${needed} segment(s), mais il n’en reste que ${subscription.remaining_segments}.`)
+    }
     const { request, recipients } = await replacementService.createReplacement(form, selected, message)
     const result = await replacementService.sendReplacement({ ...request, message }, recipients)
     await reload(); navigate('replacements')
@@ -90,6 +98,7 @@ export default function App() {
   else if (page === 'replacement') content = <ReplacementPage locations={locations} key={payload?.id || 'new'} coaches={coaches} settings={settings} duplicate={payload} clearDuplicate={() => setPayload(null)} onSend={send} />
   else if (page === 'replacements') content = <ReplacementsPage locations={locations} settings={settings} key={payload?.filter || 'all'} initialFilter={payload?.filter || 'all'} replacements={replacements} onDetails={(r) => navigate('details', r)} onDuplicate={(r) => navigate('replacement', r)} navigate={navigate} />
   else if (page === 'activity') content = <ActivityPage replacements={replacements} navigate={navigate} />
+  else if (page === 'subscription') content = <SubscriptionPage overview={subscription} onReload={setSubscription} />
   else if (page === 'settings') content = <SettingsPage settings={settings} onSave={async (fields) => { const saved = await settingsService.saveSettings(fields); setSettings({ ...settingsService.defaultSettings, ...saved }) }} />
   else if (page === 'edit-replacement') content = <EditReplacementPage locations={locations} settings={settings} replacement={payload} onCancel={() => navigate('details', payload)} onSave={async (fields) => { await replacementService.updateReplacement(payload.id, fields); await reload(); navigate('details', { ...payload, ...fields }) }} />
   else if (page === 'details') content = <ReplacementDetails settings={settings} replacement={replacements.find((item) => item.id === payload?.id) || payload} coaches={coaches} onBack={() => navigate('replacements')} onDuplicate={(r) => navigate('replacement', r)} onEdit={(r) => navigate('edit-replacement', r)} onRemind={async (r) => { const result = await replacementService.remindPendingRecipients(r); await reload(); return result }} onCancel={async (r) => { await replacementService.cancelReplacement(r.id); await reload(); navigate('replacements') }} onComplete={async (r) => { await replacementService.completeReplacement(r.id); await reload(); navigate('replacements') }} onArchive={async (r) => { await replacementService.archiveReplacement(r.id); await reload(); navigate('replacements') }} onRestore={async (r) => { await replacementService.restoreReplacement(r.id); await reload(); navigate('replacements') }} onAssign={async (r, coach) => { await replacementService.assignReplacementManually(r, coach); await reload() }} />

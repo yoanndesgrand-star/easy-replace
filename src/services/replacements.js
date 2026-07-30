@@ -1,5 +1,11 @@
 import { supabase } from '../lib/supabase'
 
+async function authHeaders() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.access_token) throw new Error('Votre session a expiré. Reconnectez-vous.')
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }
+}
+
 const selection = '*, replacement_recipients!replacement_recipients_replacement_id_fkey(*)'
 
 export async function listReplacements() {
@@ -37,16 +43,18 @@ export async function sendReplacement(request, recipients) {
   if (!recipients.length) throw new Error('Sélectionnez au moins un destinataire.')
   if (recipients.length > 250) throw new Error('Maximum 250 destinataires par envoi.')
 
+  const headers = await authHeaders()
   const details = await Promise.all(recipients.map(async (item) => {
     try {
       const response = await fetch('/api/send-sms', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           replacementId: request.id,
           recipient: { id: item.id, phone: item.phone_snapshot, name: item.coach_name_snapshot },
           message: `${request.message}\nRépondre : ${window.location.origin}/r/${item.response_token}`,
           batchSize: recipients.length,
+          messageType: 'initial',
         }),
       })
       const result = await response.json().catch(() => ({ success: false, error: 'Réponse serveur invalide.' }))
@@ -86,16 +94,18 @@ export async function remindPendingRecipients(request) {
   if (recipients.length > 250) throw new Error('Maximum 250 destinataires par relance.')
 
   const remindedAt = new Date().toISOString()
+  const headers = await authHeaders()
   const details = await Promise.all(recipients.map(async (item) => {
     try {
       const response = await fetch('/api/send-sms', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           replacementId: request.id,
           recipient: { id: item.id, phone: item.phone_snapshot, name: item.coach_name_snapshot },
           message: `Rappel Easy Replace\n${request.message}\nRépondre : ${window.location.origin}/r/${item.response_token}`,
           batchSize: recipients.length,
+          messageType: 'reminder',
         }),
       })
       const result = await response.json().catch(() => ({ success: false, error: 'Réponse serveur invalide.' }))
