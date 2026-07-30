@@ -64,6 +64,7 @@ export function buildTimeline(replacement) {
   }
 
   recipients.forEach((recipient) => {
+    if (recipient.last_reminded_at) events.push({ at: recipient.last_reminded_at, type: 'reminded', title: `${recipient.coach_name_snapshot} a été relancé`, detail: `Relance n°${recipient.reminder_count || 1} envoyée.` })
     if (recipient.opened_at) events.push({ at: recipient.opened_at, type: 'opened', title: `${recipient.coach_name_snapshot} a ouvert le lien`, detail: 'La demande a été consultée.' })
     if (recipient.responded_at && recipient.response_status === 'declined') events.push({ at: recipient.responded_at, type: 'declined', title: `${recipient.coach_name_snapshot} a décliné`, detail: 'Le coach a indiqué être indisponible.' })
     if (recipient.responded_at && recipient.response_status === 'accepted') events.push({ at: recipient.responded_at, type: 'accepted', title: `${recipient.coach_name_snapshot} a accepté`, detail: 'Le remplacement a été attribué.' })

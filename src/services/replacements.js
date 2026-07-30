@@ -67,6 +67,58 @@ export async function sendReplacement(request, recipients) {
   return { success: sent === details.length, sent, failed: details.length - sent, details }
 }
 
+export async function remindPendingRecipients(request) {
+  if (!request?.id) throw new Error('Remplacement introuvable.')
+  if (request.status === 'filled' || request.accepted_recipient_id) {
+    throw new Error('Ce remplacement est déjà pourvu.')
+  }
+  if (request.status === 'cancelled') throw new Error('Ce remplacement est annulé.')
+
+  const recipients = (request.replacement_recipients || []).filter((item) =>
+    !['accepted', 'declined', 'closed'].includes(item.response_status),
+  )
+  if (!recipients.length) throw new Error('Aucun coach en attente à relancer.')
+  if (recipients.length > 250) throw new Error('Maximum 250 destinataires par relance.')
+
+  const remindedAt = new Date().toISOString()
+  const details = await Promise.all(recipients.map(async (item) => {
+    try {
+      const response = await fetch('/api/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          replacementId: request.id,
+          recipient: { id: item.id, phone: item.phone_snapshot, name: item.coach_name_snapshot },
+          message: `Rappel Easy Replace\n${request.message}\nRépondre : ${window.location.origin}/r/${item.response_token}`,
+          batchSize: recipients.length,
+        }),
+      })
+      const result = await response.json().catch(() => ({ success: false, error: 'Réponse serveur invalide.' }))
+      return {
+        recipient: item,
+        success: response.ok && result.success === true,
+        messageId: result.messageId || null,
+        error: response.ok && result.success === true ? null : result.error || 'Envoi impossible',
+      }
+    } catch {
+      return { recipient: item, success: false, messageId: null, error: 'Impossible de contacter le service SMS.' }
+    }
+  }))
+
+  await Promise.all(details.map(({ recipient, success, messageId, error }) =>
+    supabase.from('replacement_recipients').update({
+      sms_status: success ? 'sent' : 'failed',
+      provider_message_id: messageId || recipient.provider_message_id || null,
+      error_message: error || null,
+      reminder_count: (recipient.reminder_count || 0) + 1,
+      last_reminded_at: remindedAt,
+    }).eq('id', recipient.id),
+  ))
+
+  const sent = details.filter((item) => item.success).length
+  return { success: sent === details.length, sent, failed: details.length - sent, total: details.length, details }
+}
+
 export async function updateReplacementStatus(id, status) {
   const { error } = await supabase.from('replacement_requests').update({ status }).eq('id', id)
   if (error) throw error
