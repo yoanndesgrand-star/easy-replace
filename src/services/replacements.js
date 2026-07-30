@@ -3,6 +3,11 @@ import { supabase } from '../lib/supabase'
 const selection = '*, replacement_recipients!replacement_recipients_replacement_id_fkey(*)'
 
 export async function listReplacements() {
+  // Répare et clôture les statuts côté base avant chaque lecture.
+  // La fonction est idempotente : aucun changement si tout est déjà cohérent.
+  const { error: syncError } = await supabase.rpc('synchronize_replacement_statuses')
+  if (syncError && syncError.code !== 'PGRST202') throw syncError
+
   const { data, error } = await supabase.from('replacement_requests').select(selection).order('created_at', { ascending: false })
   if (error) throw error
   return data

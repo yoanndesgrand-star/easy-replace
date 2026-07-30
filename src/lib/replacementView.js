@@ -10,9 +10,9 @@ export function getReplacementCategory(replacement, now = new Date()) {
   const isPast = start ? start.getTime() < now.getTime() : false
 
   if (replacement.archived_at) return 'archived'
-  if (replacement.status === 'cancelled') return 'cancelled'
-  if (replacement.status === 'completed' || isPast) return 'completed'
-  if (replacement.status === 'filled' || replacement.accepted_recipient_id || replacement.accepted_coach_name) return 'filled'
+  if (replacement.status === 'cancelled' || replacement.cancelled_at) return 'cancelled'
+  if (replacement.status === 'completed' || replacement.completed_at || isPast) return 'completed'
+  if (replacement.status === 'filled' || replacement.accepted_recipient_id || replacement.accepted_coach_id || replacement.accepted_coach_name) return 'filled'
 
   if (['draft', 'sent'].includes(replacement.status)) {
     if (start) {
