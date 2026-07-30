@@ -2,7 +2,7 @@ const links = [
   ['dashboard', 'Tableau de bord', '⌂'],
   ['coaches', 'Coachs', '♙'],
   ['replacement', 'Nouveau remplacement', '+'],
-  ['history', 'Historique', '◷'],
+  ['replacements', 'Remplacements', '◷'],
 ]
 
 export default function AppShell({ page, navigate, onSignOut, children }) {

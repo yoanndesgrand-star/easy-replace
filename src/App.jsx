@@ -6,7 +6,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import CoachesPage from './pages/CoachesPage'
 import ReplacementPage from './pages/ReplacementPage'
-import ReplacementHistory from './pages/ReplacementHistory'
+import ReplacementsPage from './pages/ReplacementsPage'
 import ReplacementDetails from './pages/ReplacementDetails'
 import CoachResponsePage from './pages/CoachResponsePage'
 import * as coachService from './services/coaches'
@@ -48,7 +48,8 @@ export default function App() {
   useEffect(() => {
     if (!session || recovery || !supabase) return
     const channel = supabase.channel('replacement-dashboard-live')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'replacement_requests' }, () => reload())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'replacement_requests' }, () => reload())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'replacement_recipients' }, () => reload())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [session, recovery])
@@ -58,10 +59,10 @@ export default function App() {
   async function send(form, selected, message) {
     const { request, recipients } = await replacementService.createReplacement(form, selected, message)
     const result = await replacementService.sendReplacement({ ...request, message }, recipients)
-    await reload(); navigate('history')
+    await reload(); navigate('replacements')
     window.setTimeout(() => window.alert(
       result.failed
-        ? `${result.sent} SMS envoyé(s), ${result.failed} échec(s). Consultez l’historique pour les détails.`
+        ? `${result.sent} SMS envoyé(s), ${result.failed} échec(s). Consultez les remplacements pour les détails.`
         : `${result.sent} SMS envoyé(s).`,
     ), 50)
   }
@@ -75,8 +76,8 @@ export default function App() {
   let content
   if (page === 'coaches') content = <CoachesPage coaches={coaches} onSave={saveCoach} onToggle={async (c) => { await coachService.setCoachActive(c.id, !c.is_active); reload() }} onDelete={async (id) => { await coachService.deleteCoach(id); reload() }} />
   else if (page === 'replacement') content = <ReplacementPage key={payload?.id || 'new'} coaches={coaches} duplicate={payload} clearDuplicate={() => setPayload(null)} onSend={send} />
-  else if (page === 'history') content = <ReplacementHistory replacements={replacements} onDetails={(r) => navigate('details', r)} onDuplicate={(r) => navigate('replacement', r)} onStatus={async (id, status) => { await replacementService.updateReplacementStatus(id, status); reload() }} onDelete={async (id) => { await replacementService.deleteReplacement(id); reload() }} />
-  else if (page === 'details') content = <ReplacementDetails replacement={payload} onBack={() => navigate('history')} onDuplicate={(r) => navigate('replacement', r)} />
+  else if (page === 'replacements') content = <ReplacementsPage key={payload?.filter || 'all'} initialFilter={payload?.filter || 'all'} replacements={replacements} onDetails={(r) => navigate('details', r)} onDuplicate={(r) => navigate('replacement', r)} navigate={navigate} />
+  else if (page === 'details') content = <ReplacementDetails replacement={replacements.find((item) => item.id === payload?.id) || payload} onBack={() => navigate('replacements')} onDuplicate={(r) => navigate('replacement', r)} />
   else content = <DashboardPage coaches={coaches} replacements={replacements} navigate={navigate} />
   return <AppShell page={page} navigate={navigate} onSignOut={() => supabase.auth.signOut()}>{error && <div className="global-error">{error}<button onClick={() => setError('')}>×</button></div>}{content}</AppShell>
 }

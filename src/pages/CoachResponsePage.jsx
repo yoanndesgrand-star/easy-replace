@@ -40,7 +40,7 @@ export default function CoachResponsePage({ token }) {
     const declined = ['declined', 'already_declined'].includes(finalResult.code)
     const title = accepted ? 'Remplacement confirmé' : declined ? 'Réponse enregistrée' : finalResult.code === 'already_filled' ? 'Remplacement déjà pourvu' : finalResult.code === 'cancelled' ? 'Demande annulée' : 'Demande indisponible'
     const text = accepted
-      ? `Merci ${invitation.coachName}. La gérante est informée de votre acceptation.`
+      ? `Merci ${invitation.coachName}. La personne responsable est informée de votre acceptation.`
       : declined
         ? `Merci ${invitation.coachName}. Votre indisponibilité a été transmise.`
         : finalResult.message

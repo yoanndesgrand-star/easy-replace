@@ -3,10 +3,10 @@ import { supabase } from '../lib/supabase'
 import { formatDate } from '../lib/format'
 
 const stateCopy = {
-  accepted: ['Remplacement confirmé', 'Vous avez accepté ce remplacement. La gérante en a été informée.'],
+  accepted: ['Remplacement confirmé', 'Vous avez accepté ce remplacement. La personne responsable en a été informée.'],
   declined: ['Réponse enregistrée', 'Vous avez indiqué ne pas être disponible pour ce remplacement.'],
   already_filled: ['Ce remplacement est déjà pourvu', 'Un autre coach a accepté cette demande. Merci pour votre disponibilité.'],
-  cancelled: ['Demande annulée', 'La gérante a annulé cette demande de remplacement.'],
+  cancelled: ['Demande annulée', 'La personne responsable a annulé cette demande de remplacement.'],
   expired: ['Lien expiré', 'Cette demande n’est plus disponible.'],
   invalid: ['Lien invalide', 'Ce lien est incorrect ou n’est plus utilisable.'],
 }
