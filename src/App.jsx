@@ -83,7 +83,7 @@ export default function App() {
   if (!session) return <AuthPage />
 
   let content
-  if (page === 'coaches') content = <CoachesPage coaches={coaches} locations={locations} onSave={saveCoach} onToggle={async (c) => { await coachService.setCoachActive(c.id, !c.is_active); reload() }} onDelete={async (id) => { await coachService.deleteCoach(id); reload() }} />
+  if (page === 'coaches') content = <CoachesPage coaches={coaches} replacements={replacements} locations={locations} onSave={saveCoach} onToggle={async (c) => { await coachService.setCoachActive(c.id, !c.is_active); reload() }} onArchive={async (id) => { await coachService.archiveCoach(id); reload() }} onRestore={async (id) => { await coachService.restoreCoach(id); reload() }} />
   else if (page === 'locations') content = <LocationsPage locations={locations} coaches={coaches} onSave={async (v) => { await locationService.saveLocation(v); await reload() }} onToggle={async (v) => { await locationService.setLocationActive(v.id, !v.is_active); await reload() }} onDelete={async (id) => { await locationService.deleteLocation(id); await reload() }} />
   else if (page === 'replacement') content = <ReplacementPage locations={locations} key={payload?.id || 'new'} coaches={coaches} settings={settings} duplicate={payload} clearDuplicate={() => setPayload(null)} onSend={send} />
   else if (page === 'replacements') content = <ReplacementsPage locations={locations} settings={settings} key={payload?.filter || 'all'} initialFilter={payload?.filter || 'all'} replacements={replacements} onDetails={(r) => navigate('details', r)} onDuplicate={(r) => navigate('replacement', r)} navigate={navigate} />
