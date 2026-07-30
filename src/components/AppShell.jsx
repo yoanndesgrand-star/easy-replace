@@ -3,6 +3,7 @@ const links = [
   ['coaches', 'Coachs', '♙'],
   ['replacement', 'Nouveau remplacement', '+'],
   ['replacements', 'Remplacements', '◷'],
+  ['activity', 'Activité', '≋'],
 ]
 
 export default function AppShell({ page, navigate, onSignOut, children }) {

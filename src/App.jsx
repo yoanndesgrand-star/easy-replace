@@ -8,6 +8,7 @@ import CoachesPage from './pages/CoachesPage'
 import ReplacementPage from './pages/ReplacementPage'
 import ReplacementsPage from './pages/ReplacementsPage'
 import ReplacementDetails from './pages/ReplacementDetails'
+import ActivityPage from './pages/ActivityPage'
 import CoachResponsePage from './pages/CoachResponsePage'
 import * as coachService from './services/coaches'
 import * as replacementService from './services/replacements'
@@ -77,6 +78,7 @@ export default function App() {
   if (page === 'coaches') content = <CoachesPage coaches={coaches} onSave={saveCoach} onToggle={async (c) => { await coachService.setCoachActive(c.id, !c.is_active); reload() }} onDelete={async (id) => { await coachService.deleteCoach(id); reload() }} />
   else if (page === 'replacement') content = <ReplacementPage key={payload?.id || 'new'} coaches={coaches} duplicate={payload} clearDuplicate={() => setPayload(null)} onSend={send} />
   else if (page === 'replacements') content = <ReplacementsPage key={payload?.filter || 'all'} initialFilter={payload?.filter || 'all'} replacements={replacements} onDetails={(r) => navigate('details', r)} onDuplicate={(r) => navigate('replacement', r)} navigate={navigate} />
+  else if (page === 'activity') content = <ActivityPage replacements={replacements} navigate={navigate} />
   else if (page === 'details') content = <ReplacementDetails replacement={replacements.find((item) => item.id === payload?.id) || payload} onBack={() => navigate('replacements')} onDuplicate={(r) => navigate('replacement', r)} onRemind={async (r) => { const result = await replacementService.remindPendingRecipients(r); await reload(); return result }} />
   else content = <DashboardPage coaches={coaches} replacements={replacements} navigate={navigate} />
   return <AppShell page={page} navigate={navigate} onSignOut={() => supabase.auth.signOut()}>{error && <div className="global-error">{error}<button onClick={() => setError('')}>×</button></div>}{content}</AppShell>
