@@ -8,10 +8,12 @@ import CoachesPage from './pages/CoachesPage'
 import ReplacementPage from './pages/ReplacementPage'
 import ReplacementHistory from './pages/ReplacementHistory'
 import ReplacementDetails from './pages/ReplacementDetails'
+import CoachResponsePage from './pages/CoachResponsePage'
 import * as coachService from './services/coaches'
 import * as replacementService from './services/replacements'
 
 export default function App() {
+  const publicToken = window.location.pathname.match(/^\/r\/([0-9a-f-]{36})\/?$/i)?.[1] || null
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [recovery, setRecovery] = useState(window.location.pathname === '/reset-password' || window.location.hash.includes('type=recovery'))
@@ -22,6 +24,7 @@ export default function App() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (publicToken) { setLoading(false); return }
     if (!supabase) { setLoading(false); return }
     supabase.auth.getSession().then(({ data }) => {
       if (!recovery) setSession(data.session?.user?.email_confirmed_at ? data.session : null)
@@ -32,7 +35,7 @@ export default function App() {
       else if (!recovery) setSession(nextSession?.user?.email_confirmed_at ? nextSession : null)
     })
     return () => listener.subscription.unsubscribe()
-  }, [recovery])
+  }, [recovery, publicToken])
 
   async function reload() {
     try {
@@ -41,6 +44,14 @@ export default function App() {
     } catch (err) { setError(err.message) }
   }
   useEffect(() => { if (session && !recovery) reload() }, [session, recovery])
+
+  useEffect(() => {
+    if (!session || recovery || !supabase) return
+    const channel = supabase.channel('replacement-dashboard-live')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'replacement_requests' }, () => reload())
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [session, recovery])
 
   function navigate(next, data = null) { setPage(next); setPayload(data); window.scrollTo(0, 0) }
   async function saveCoach(value) { await coachService.saveCoach(value); await reload() }
@@ -56,6 +67,7 @@ export default function App() {
   }
 
   if (!isSupabaseConfigured) return <div className="setup"><div className="brand"><span>ER</span><strong>Easy Replace</strong></div><h1>Configuration requise</h1><p>Copiez <code>.env.example</code> vers <code>.env.local</code>, puis renseignez l’URL et la clé publique anonyme Supabase.</p><p>Aucun secret Brevo n’est requis pour le mode test.</p></div>
+  if (publicToken && isSupabaseConfigured) return <CoachResponsePage token={publicToken} />
   if (loading) return <div className="loader">Chargement d’Easy Replace…</div>
   if (recovery) return <ResetPasswordPage onComplete={() => { setRecovery(false); setSession(null) }} />
   if (!session) return <AuthPage />

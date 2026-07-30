@@ -40,7 +40,7 @@ export async function sendReplacement(request, recipients) {
         body: JSON.stringify({
           replacementId: request.id,
           recipient: { id: item.id, phone: item.phone_snapshot, name: item.coach_name_snapshot },
-          message: request.message,
+          message: `${request.message}\nRépondre : ${window.location.origin}/r/${item.response_token}`,
           batchSize: recipients.length,
         }),
       })

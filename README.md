@@ -20,3 +20,9 @@ Pour tester la fonction locale Vercel, définir `BREVO_API_KEY` dans l’environ
 Pour activer les SMS réels, créer une clé API v3 Brevo, activer/configurer les SMS transactionnels dans Brevo, vérifier que l’expéditeur `EasyReplace` est accepté dans les pays ciblés, puis ajouter `BREVO_API_KEY` uniquement comme variable serveur Vercel. Ne jamais la préfixer par `VITE_`.
 
 La route appelle `POST https://api.brevo.com/v3/transactionalSMS/sms` une fois par coach et renvoie les succès et échecs individuels.
+
+## Réponse sécurisée des coachs (Phase 1)
+
+Appliquer la migration `supabase/migrations/003_secure_coach_responses.sql` avant le déploiement.
+
+Chaque destinataire reçoit un lien personnel `/r/<token>`. La page est publique, mais le jeton UUID ne donne accès qu'aux informations utiles de la demande. L'attribution est effectuée par une fonction PostgreSQL atomique : le premier coach qui accepte obtient le remplacement, puis les autres liens affichent que la demande est déjà pourvue.

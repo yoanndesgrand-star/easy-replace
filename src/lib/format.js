@@ -17,7 +17,7 @@ export function formatDate(value, options = {}) {
 
 export const statusLabels = {
   draft: 'Brouillon', sent: 'Envoyée', filled: 'Pourvue', cancelled: 'Annulée',
-  pending: 'En attente', failed: 'Échec',
+  pending: 'En attente', failed: 'Échec', accepted: 'Accepté', declined: 'Indisponible', closed: 'Déjà pourvu',
 }
 
 export function buildSms(form) {

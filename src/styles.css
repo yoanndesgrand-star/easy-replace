@@ -21,3 +21,19 @@ input,select,textarea{border:1px solid #cfd9e6;border-radius:9px;background:whit
   .auth-links{display:grid;justify-content:stretch}
   .auth-links .link-button{text-align:center}
 }
+
+/* Réponse publique du coach */
+.public-response-page{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(145deg,#07182d 0%,#123c6d 58%,#eaf2fb 58%)}
+.public-response-card{width:min(560px,100%);background:white;border-radius:22px;padding:34px;box-shadow:0 24px 70px #06182f42}
+.public-logo{display:block;width:260px;max-width:76%;height:auto;margin:0 auto 20px}
+.public-response-card h1{font-size:clamp(1.7rem,5vw,2.35rem);margin-bottom:8px;text-align:center}
+.public-response-card>.eyebrow{text-align:center}.public-intro{text-align:center;margin-bottom:25px}
+.invitation-summary{border:1px solid var(--border);border-radius:15px;overflow:hidden;margin:22px 0}
+.invitation-summary>div{display:grid;grid-template-columns:120px 1fr;gap:16px;padding:13px 16px;border-top:1px solid var(--border)}
+.invitation-summary>div:first-child{border-top:0}.invitation-summary span{color:var(--muted);font-size:.84rem}.invitation-summary strong{font-size:.92rem}
+.response-actions{display:grid;gap:11px}.response-primary{padding:15px 18px}.response-note{text-align:center;font-size:.78rem;margin:14px 0 0}
+.response-state{text-align:center;padding:18px 0 10px}.response-state>span{display:grid;place-items:center;width:70px;height:70px;border-radius:50%;margin:0 auto 20px;font-size:2rem;font-weight:800}
+.response-state.success>span{background:#e6f6ef;color:var(--success)}.response-state.warning>span{background:#fff2d9;color:#986511}.response-state.danger>span{background:#ffebec;color:var(--danger)}.response-state.neutral>span{background:#edf2f8;color:var(--blue)}
+.response-state p{font-size:1rem;line-height:1.6}.public-loader{text-align:center;padding:35px;color:var(--muted)}.filled-summary{margin:10px 0;color:var(--success)}
+.badge.accepted{background:#e6f6ef;color:var(--success)}.badge.declined{background:#eef1f5;color:#526070}.badge.closed{background:#fff2d9;color:#986511}
+@media(max-width:560px){.public-response-page{padding:0;background:white;place-items:start}.public-response-card{min-height:100vh;border-radius:0;padding:28px 20px;box-shadow:none}.public-logo{width:230px}.invitation-summary>div{grid-template-columns:95px 1fr}}
