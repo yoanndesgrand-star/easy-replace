@@ -1,8 +1,28 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import Notice from '../components/Notice'
 
 const initialSignUp = { firstName: '', lastName: '', email: '', password: '', passwordConfirm: '', acceptsTerms: false }
+
+function getPasswordResetRedirectUrl() {
+  const { origin, protocol } = window.location
+  if (!origin || origin === 'null' || !['http:', 'https:'].includes(protocol)) {
+    throw new Error('INVALID_APP_ORIGIN')
+  }
+  return `${origin}/reset-password`
+}
+
+function getAuthErrorMessage(error) {
+  if (error?.message === 'INVALID_APP_ORIGIN') {
+    return 'Ouvre Easy Replace depuis son adresse web ou le serveur local, puis réessaie.'
+  }
+  if (error?.name === 'AuthRetryableFetchError' || /load failed|failed to fetch|network/i.test(error?.message || '')) {
+    return 'Impossible de contacter le service pour le moment. Vérifie ta connexion puis réessaie.'
+  }
+  if (error?.status === 429) return 'Trop de demandes ont été effectuées. Patiente quelques minutes puis réessaie.'
+  if (error?.status >= 500) return 'Le service est temporairement indisponible. Réessaie dans quelques instants.'
+  return error?.message || 'Une erreur est survenue. Réessaie dans quelques instants.'
+}
 
 export default function AuthPage() {
   const [mode, setMode] = useState('sign-in')
@@ -12,16 +32,23 @@ export default function AuthPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const submittingRef = useRef(false)
 
   function changeMode(nextMode) {
     setMode(nextMode); setError(''); setMessage(''); setPassword('')
   }
 
   async function submit(event) {
-    event.preventDefault(); setLoading(true); setError(''); setMessage('')
+    event.preventDefault()
+    if (submittingRef.current) return
+    submittingRef.current = true
+    setLoading(true); setError(''); setMessage('')
     try {
       if (mode === 'forgot') {
-        const { error: authError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` })
+        const cleanEmail = email.trim()
+        if (!cleanEmail) throw new Error('Saisis ton adresse e-mail.')
+        const redirectTo = getPasswordResetRedirectUrl()
+        const { error: authError } = await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo })
         if (authError) throw authError
         setMessage('Un lien de réinitialisation vient de vous être envoyé.')
       } else if (mode === 'sign-up') {
@@ -53,8 +80,10 @@ export default function AuthPage() {
         }
       }
     } catch (err) {
-      setError(err.message)
+      console.error('Échec de la requête d’authentification Supabase :', err)
+      setError(getAuthErrorMessage(err))
     } finally {
+      submittingRef.current = false
       setLoading(false)
     }
   }
@@ -62,7 +91,7 @@ export default function AuthPage() {
   const isSignUp = mode === 'sign-up'
   const isForgot = mode === 'forgot'
   return <div className="auth-page">
-    <section className="auth-aside"><img className="auth-aside-logo" src="/logo-transparent.png" alt="Easy Replace" /><h1>Un remplacement trouvé, sans perdre de temps.</h1><p>Centralisez vos coachs et envoyez vos demandes en quelques instants.</p></section>
+    <section className="auth-aside"><h1>Un remplacement trouvé, sans perdre de temps.</h1><p>Centralisez vos coachs et envoyez vos demandes en quelques instants.</p></section>
     <main className="auth-main"><form className="auth-card" onSubmit={submit}>
       <img className="auth-logo" src="/logo.png" alt="Easy Replace — Trouvez un remplaçant en moins d’une minute" />
       <p className="eyebrow">Espace administrateur</p>

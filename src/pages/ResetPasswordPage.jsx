@@ -16,7 +16,7 @@ export default function ResetPasswordPage({ onComplete }) {
     window.history.replaceState({}, '', '/')
     onComplete()
   }
-  return <div className="auth-page centered"><form className="auth-card" onSubmit={submit}><div className="brand"><span>ER</span><strong>Easy Replace</strong></div><p className="eyebrow">Sécurité</p><h2>Nouveau mot de passe</h2><p>Choisissez un mot de passe unique d’au moins 8 caractères.</p><Notice type="error">{error}</Notice>
+  return <div className="auth-page centered"><form className="auth-card" onSubmit={submit}><img className="auth-logo" src="/logo.png" alt="Easy Replace — Trouvez un remplaçant en moins d’une minute" /><p className="eyebrow">Sécurité</p><h2>Nouveau mot de passe</h2><p>Choisissez un mot de passe unique d’au moins 8 caractères.</p><Notice type="error">{error}</Notice>
     <label>Nouveau mot de passe<input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
     <label>Confirmer<input type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} /></label>
     <button className="button primary full">Enregistrer et revenir à la connexion</button></form></div>
