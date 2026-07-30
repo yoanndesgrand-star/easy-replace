@@ -17,6 +17,7 @@ import * as coachService from './services/coaches'
 import * as replacementService from './services/replacements'
 import * as settingsService from './services/settings'
 import * as locationService from './services/locations'
+import * as organizationService from './services/organizations'
 
 export default function App() {
   const publicToken = window.location.pathname.match(/^\/r\/([0-9a-f-]{36})\/?$/i)?.[1] || null
@@ -47,6 +48,7 @@ export default function App() {
 
   async function reload() {
     try {
+      await organizationService.ensureOrganization()
       const [locationData, requestData, settingsData] = await Promise.all([locationService.listLocations(), replacementService.listReplacements(), settingsService.getSettings()])
       const coachData = await coachService.listCoaches()
       setLocations(locationData); setCoaches(coachData); setReplacements(requestData); setSettings(settingsData)

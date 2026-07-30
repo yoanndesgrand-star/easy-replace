@@ -17,7 +17,7 @@ export const defaultSettings = {
 export async function getSettings() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Session introuvable.')
-  const { data, error } = await supabase.from('establishment_settings').select('*').eq('user_id', user.id).maybeSingle()
+  const { data, error } = await supabase.from('establishment_settings').select('*').maybeSingle()
   if (error) throw error
   return { ...defaultSettings, ...(data || {}), email: data?.email || user.email || '' }
 }
@@ -37,7 +37,7 @@ export async function saveSettings(fields) {
     logo_url: fields.logo_url || null,
     timezone: fields.timezone,
   }
-  const { data, error } = await supabase.from('establishment_settings').upsert(payload, { onConflict: 'user_id' }).select().single()
+  const { data, error } = await supabase.from('establishment_settings').upsert(payload, { onConflict: 'organization_id' }).select().single()
   if (error) throw error
   return data
 }
@@ -48,7 +48,9 @@ export async function uploadLogo(file) {
   if (!file.type.startsWith('image/')) throw new Error('Sélectionnez un fichier image.')
   if (file.size > 2 * 1024 * 1024) throw new Error('Le logo ne doit pas dépasser 2 Mo.')
   const extension = file.name.split('.').pop()?.toLowerCase() || 'png'
-  const path = `${user.id}/logo-${Date.now()}.${extension}`
+  const { data: organizationId, error: organizationError } = await supabase.rpc('current_organization_id')
+  if (organizationError || !organizationId) throw organizationError || new Error('Établissement introuvable.')
+  const path = `${organizationId}/logo-${Date.now()}.${extension}`
   const { error } = await supabase.storage.from('establishment-logos').upload(path, file, { upsert: true, cacheControl: '3600' })
   if (error) throw error
   return supabase.storage.from('establishment-logos').getPublicUrl(path).data.publicUrl

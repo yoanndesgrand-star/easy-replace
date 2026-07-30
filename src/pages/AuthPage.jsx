@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import Notice from '../components/Notice'
 
-const initialSignUp = { firstName: '', lastName: '', email: '', password: '', passwordConfirm: '', acceptsTerms: false }
+const initialSignUp = { establishmentName: '', firstName: '', lastName: '', email: '', password: '', passwordConfirm: '', acceptsTerms: false }
 
 function getPasswordResetRedirectUrl() {
   const { origin, protocol } = window.location
@@ -62,7 +62,7 @@ export default function AuthPage() {
           password: signUp.password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { first_name: firstName, last_name: lastName, full_name: `${firstName} ${lastName}` },
+            data: { establishment_name: signUp.establishmentName.trim(), first_name: firstName, last_name: lastName, full_name: `${firstName} ${lastName}` },
           },
         })
         if (authError) throw authError
@@ -100,6 +100,7 @@ export default function AuthPage() {
       <Notice type="error">{error}</Notice><Notice type="success">{message}</Notice>
 
       {isSignUp ? <>
+        <label>Nom de l’établissement<input required autoComplete="organization" value={signUp.establishmentName} onChange={(e) => setSignUp({ ...signUp, establishmentName: e.target.value })} /></label>
         <div className="auth-name-grid">
           <label>Prénom<input required autoComplete="given-name" value={signUp.firstName} onChange={(e) => setSignUp({ ...signUp, firstName: e.target.value })} /></label>
           <label>Nom<input required autoComplete="family-name" value={signUp.lastName} onChange={(e) => setSignUp({ ...signUp, lastName: e.target.value })} /></label>
