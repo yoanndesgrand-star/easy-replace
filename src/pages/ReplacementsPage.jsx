@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { formatDate } from '../lib/format'
 import { categoryLabels, getReplacementCategory } from '../lib/replacementView'
 
-const filters = ['all', 'urgent', 'open', 'filled', 'completed']
+const filters = ['all', 'urgent', 'open', 'filled', 'completed', 'cancelled', 'archived']
 
 function ReplacementCard({ replacement, category, onDetails, onDuplicate }) {
   const recipients = replacement.replacement_recipients || []
@@ -35,7 +35,7 @@ export default function ReplacementsPage({ replacements, onDetails, onDuplicate,
   const counts = useMemo(() => categorized.reduce((result, item) => ({ ...result, [item.category]: (result[item.category] || 0) + 1 }), {}), [categorized])
   const visible = filter === 'all' ? categorized : categorized.filter((item) => item.category === filter)
   const sorted = [...visible].sort((a, b) => {
-    const priority = { urgent: 0, open: 1, filled: 2, completed: 3 }
+    const priority = { urgent: 0, open: 1, filled: 2, completed: 3, cancelled: 4, archived: 5 }
     if (priority[a.category] !== priority[b.category]) return priority[a.category] - priority[b.category]
     return `${a.replacement.replacement_date}${a.replacement.start_time}`.localeCompare(`${b.replacement.replacement_date}${b.replacement.start_time}`)
   })
@@ -45,7 +45,7 @@ export default function ReplacementsPage({ replacements, onDetails, onDuplicate,
 
     <div className="replacement-summary">
       {['urgent', 'open', 'filled', 'completed'].map((category) => <button key={category} className={`summary-card ${category} ${filter === category ? 'active' : ''}`} onClick={() => setFilter(filter === category ? 'all' : category)}>
-        <span>{categoryLabels[category]}</span><strong>{counts[category] || 0}</strong><small>{category === 'urgent' ? 'à traiter maintenant' : category === 'open' ? 'encore sans coach' : category === 'filled' ? 'déjà attribués' : 'archivés automatiquement'}</small>
+        <span>{categoryLabels[category]}</span><strong>{counts[category] || 0}</strong><small>{category === 'urgent' ? 'à traiter maintenant' : category === 'open' ? 'encore sans coach' : category === 'filled' ? 'déjà attribués' : 'séances clôturées'}</small>
       </button>)}
     </div>
 

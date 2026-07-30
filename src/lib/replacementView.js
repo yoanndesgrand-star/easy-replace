@@ -9,7 +9,9 @@ export function getReplacementCategory(replacement, now = new Date()) {
   const start = getReplacementDateTime(replacement)
   const isPast = start ? start.getTime() < now.getTime() : false
 
-  if (replacement.status === 'cancelled' || isPast) return 'completed'
+  if (replacement.archived_at) return 'archived'
+  if (replacement.status === 'cancelled') return 'cancelled'
+  if (replacement.status === 'completed' || isPast) return 'completed'
   if (replacement.status === 'filled' || replacement.accepted_recipient_id || replacement.accepted_coach_name) return 'filled'
 
   if (['draft', 'sent'].includes(replacement.status)) {
@@ -28,6 +30,8 @@ export const categoryLabels = {
   open: 'À pourvoir',
   filled: 'Pourvu',
   completed: 'Terminé',
+  cancelled: 'Annulé',
+  archived: 'Archivé',
 }
 
 export function getRecipientState(recipient) {
@@ -69,6 +73,10 @@ export function buildTimeline(replacement) {
     if (recipient.responded_at && recipient.response_status === 'declined') events.push({ at: recipient.responded_at, type: 'declined', title: `${recipient.coach_name_snapshot} a décliné`, detail: 'Le coach a indiqué être indisponible.' })
     if (recipient.responded_at && recipient.response_status === 'accepted') events.push({ at: recipient.responded_at, type: 'accepted', title: `${recipient.coach_name_snapshot} a accepté`, detail: 'Le remplacement a été attribué.' })
   })
+
+  if (replacement.cancelled_at) events.push({ at: replacement.cancelled_at, type: 'cancelled', title: 'Remplacement annulé', detail: 'Les liens de réponse encore ouverts ont été fermés.' })
+  if (replacement.completed_at) events.push({ at: replacement.completed_at, type: 'completed', title: 'Remplacement terminé', detail: 'La demande a été clôturée manuellement.' })
+  if (replacement.archived_at) events.push({ at: replacement.archived_at, type: 'archived', title: 'Remplacement archivé', detail: 'La demande a été retirée des listes actives.' })
 
   if (replacement.accepted_at && !events.some((event) => event.type === 'accepted' && event.at === replacement.accepted_at)) {
     events.push({ at: replacement.accepted_at, type: 'accepted', title: `${replacement.accepted_coach_name || 'Un coach'} a accepté`, detail: 'Le remplacement a été attribué.' })

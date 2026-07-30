@@ -69,6 +69,8 @@ export default function CoachResponsePage({ token }) {
 
 function getInitialState(invitation) {
   if (invitation.isCancelled) return { code: 'cancelled', message: 'Cette demande a été annulée.' }
+  if (invitation.isCompleted) return { code: 'completed', message: 'Cette demande est terminée.' }
+  if (invitation.isArchived) return { code: 'archived', message: 'Cette demande est clôturée.' }
   if (invitation.expired) return { code: 'expired', message: 'La date de ce remplacement est passée.' }
   if (invitation.isFilled && invitation.responseStatus !== 'accepted') return { code: 'already_filled', message: 'Un autre coach a déjà accepté cette demande.' }
   if (invitation.responseStatus === 'accepted') return { code: 'already_accepted', message: 'Ce remplacement vous est déjà attribué.' }

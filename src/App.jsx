@@ -9,6 +9,7 @@ import ReplacementPage from './pages/ReplacementPage'
 import ReplacementsPage from './pages/ReplacementsPage'
 import ReplacementDetails from './pages/ReplacementDetails'
 import ActivityPage from './pages/ActivityPage'
+import EditReplacementPage from './pages/EditReplacementPage'
 import CoachResponsePage from './pages/CoachResponsePage'
 import * as coachService from './services/coaches'
 import * as replacementService from './services/replacements'
@@ -79,7 +80,8 @@ export default function App() {
   else if (page === 'replacement') content = <ReplacementPage key={payload?.id || 'new'} coaches={coaches} duplicate={payload} clearDuplicate={() => setPayload(null)} onSend={send} />
   else if (page === 'replacements') content = <ReplacementsPage key={payload?.filter || 'all'} initialFilter={payload?.filter || 'all'} replacements={replacements} onDetails={(r) => navigate('details', r)} onDuplicate={(r) => navigate('replacement', r)} navigate={navigate} />
   else if (page === 'activity') content = <ActivityPage replacements={replacements} navigate={navigate} />
-  else if (page === 'details') content = <ReplacementDetails replacement={replacements.find((item) => item.id === payload?.id) || payload} onBack={() => navigate('replacements')} onDuplicate={(r) => navigate('replacement', r)} onRemind={async (r) => { const result = await replacementService.remindPendingRecipients(r); await reload(); return result }} />
+  else if (page === 'edit-replacement') content = <EditReplacementPage replacement={payload} onCancel={() => navigate('details', payload)} onSave={async (fields) => { await replacementService.updateReplacement(payload.id, fields); await reload(); navigate('details', { ...payload, ...fields }) }} />
+  else if (page === 'details') content = <ReplacementDetails replacement={replacements.find((item) => item.id === payload?.id) || payload} coaches={coaches} onBack={() => navigate('replacements')} onDuplicate={(r) => navigate('replacement', r)} onEdit={(r) => navigate('edit-replacement', r)} onRemind={async (r) => { const result = await replacementService.remindPendingRecipients(r); await reload(); return result }} onCancel={async (r) => { await replacementService.cancelReplacement(r.id); await reload(); navigate('replacements') }} onComplete={async (r) => { await replacementService.completeReplacement(r.id); await reload(); navigate('replacements') }} onArchive={async (r) => { await replacementService.archiveReplacement(r.id); await reload(); navigate('replacements') }} onRestore={async (r) => { await replacementService.restoreReplacement(r.id); await reload(); navigate('replacements') }} onAssign={async (r, coach) => { await replacementService.assignReplacementManually(r, coach); await reload() }} />
   else content = <DashboardPage coaches={coaches} replacements={replacements} navigate={navigate} />
   return <AppShell page={page} navigate={navigate} onSignOut={() => supabase.auth.signOut()}>{error && <div className="global-error">{error}<button onClick={() => setError('')}>×</button></div>}{content}</AppShell>
 }
