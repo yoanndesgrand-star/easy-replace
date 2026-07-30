@@ -62,7 +62,7 @@ export default function AuthPage() {
   const isSignUp = mode === 'sign-up'
   const isForgot = mode === 'forgot'
   return <div className="auth-page">
-    <section className="auth-aside"><div className="brand light"><span>ER</span><strong>Easy Replace</strong></div><h1>Un remplacement trouvé, sans perdre de temps.</h1><p>Centralisez vos coachs et envoyez vos demandes en quelques instants.</p></section>
+    <section className="auth-aside"><img className="auth-aside-logo" src="/logo-transparent.png" alt="Easy Replace" /><h1>Un remplacement trouvé, sans perdre de temps.</h1><p>Centralisez vos coachs et envoyez vos demandes en quelques instants.</p></section>
     <main className="auth-main"><form className="auth-card" onSubmit={submit}>
       <img className="auth-logo" src="/logo.png" alt="Easy Replace — Trouvez un remplaçant en moins d’une minute" />
       <p className="eyebrow">Espace administrateur</p>

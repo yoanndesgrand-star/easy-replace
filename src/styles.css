@@ -14,9 +14,11 @@ input,select,textarea{border:1px solid #cfd9e6;border-radius:9px;background:whit
 .terms-check{display:flex;align-items:flex-start;gap:9px;line-height:1.45}
 .terms-check input{width:18px;margin-top:2px}
 .auth-logo{display:block;width:240px;max-width:72vw;height:auto;margin:0 auto 8px}
+.auth-aside-logo{display:block;width:210px;max-width:100%;height:auto;margin:0 0 52px}
 
 @media(max-width:480px){
   .auth-logo{width:190px;margin-bottom:4px}
+  .auth-aside-logo{width:180px}
   .auth-name-grid{grid-template-columns:1fr}
   .auth-links{display:grid;justify-content:stretch}
   .auth-links .link-button{text-align:center}

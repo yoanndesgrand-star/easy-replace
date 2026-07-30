@@ -1,4 +1,4 @@
-const BREVO_URL = 'https://api.brevo.com/v3/transactionalSMS/sms'
+const BREVO_URL = 'https://api.brevo.com/v3/transactionalSMS/send'
 const PHONE_PATTERN = /^\d{10,15}$/
 
 function json(response, status, body) {
@@ -41,7 +41,13 @@ export default async function handler(request, response) {
       const brevoResponse = await fetch(BREVO_URL, {
         method: 'POST',
         headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
-        body: JSON.stringify({ sender: 'EasyReplace', recipient: recipient.phone, content: message, type: 'transactional' }),
+        body: JSON.stringify({
+          sender: 'EasyReplace',
+          recipient: recipient.phone,
+          content: message,
+          type: 'transactional',
+          tag: 'easy-replace',
+        }),
       })
       const data = await brevoResponse.json().catch(() => ({}))
       if (!brevoResponse.ok) throw new Error(data.message || `Brevo HTTP ${brevoResponse.status}`)
