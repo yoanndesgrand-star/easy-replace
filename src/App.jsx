@@ -9,10 +9,12 @@ import ReplacementPage from './pages/ReplacementPage'
 import ReplacementsPage from './pages/ReplacementsPage'
 import ReplacementDetails from './pages/ReplacementDetails'
 import ActivityPage from './pages/ActivityPage'
+import SettingsPage from './pages/SettingsPage'
 import EditReplacementPage from './pages/EditReplacementPage'
 import CoachResponsePage from './pages/CoachResponsePage'
 import * as coachService from './services/coaches'
 import * as replacementService from './services/replacements'
+import * as settingsService from './services/settings'
 
 export default function App() {
   const publicToken = window.location.pathname.match(/^\/r\/([0-9a-f-]{36})\/?$/i)?.[1] || null
@@ -23,6 +25,7 @@ export default function App() {
   const [payload, setPayload] = useState(null)
   const [coaches, setCoaches] = useState([])
   const [replacements, setReplacements] = useState([])
+  const [settings, setSettings] = useState(settingsService.defaultSettings)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -41,8 +44,8 @@ export default function App() {
 
   async function reload() {
     try {
-      const [coachData, requestData] = await Promise.all([coachService.listCoaches(), replacementService.listReplacements()])
-      setCoaches(coachData); setReplacements(requestData)
+      const [coachData, requestData, settingsData] = await Promise.all([coachService.listCoaches(), replacementService.listReplacements(), settingsService.getSettings()])
+      setCoaches(coachData); setReplacements(requestData); setSettings(settingsData)
     } catch (err) { setError(err.message) }
   }
   useEffect(() => { if (session && !recovery) reload() }, [session, recovery])
@@ -77,11 +80,12 @@ export default function App() {
 
   let content
   if (page === 'coaches') content = <CoachesPage coaches={coaches} onSave={saveCoach} onToggle={async (c) => { await coachService.setCoachActive(c.id, !c.is_active); reload() }} onDelete={async (id) => { await coachService.deleteCoach(id); reload() }} />
-  else if (page === 'replacement') content = <ReplacementPage key={payload?.id || 'new'} coaches={coaches} duplicate={payload} clearDuplicate={() => setPayload(null)} onSend={send} />
-  else if (page === 'replacements') content = <ReplacementsPage key={payload?.filter || 'all'} initialFilter={payload?.filter || 'all'} replacements={replacements} onDetails={(r) => navigate('details', r)} onDuplicate={(r) => navigate('replacement', r)} navigate={navigate} />
+  else if (page === 'replacement') content = <ReplacementPage key={payload?.id || 'new'} coaches={coaches} settings={settings} duplicate={payload} clearDuplicate={() => setPayload(null)} onSend={send} />
+  else if (page === 'replacements') content = <ReplacementsPage settings={settings} key={payload?.filter || 'all'} initialFilter={payload?.filter || 'all'} replacements={replacements} onDetails={(r) => navigate('details', r)} onDuplicate={(r) => navigate('replacement', r)} navigate={navigate} />
   else if (page === 'activity') content = <ActivityPage replacements={replacements} navigate={navigate} />
-  else if (page === 'edit-replacement') content = <EditReplacementPage replacement={payload} onCancel={() => navigate('details', payload)} onSave={async (fields) => { await replacementService.updateReplacement(payload.id, fields); await reload(); navigate('details', { ...payload, ...fields }) }} />
-  else if (page === 'details') content = <ReplacementDetails replacement={replacements.find((item) => item.id === payload?.id) || payload} coaches={coaches} onBack={() => navigate('replacements')} onDuplicate={(r) => navigate('replacement', r)} onEdit={(r) => navigate('edit-replacement', r)} onRemind={async (r) => { const result = await replacementService.remindPendingRecipients(r); await reload(); return result }} onCancel={async (r) => { await replacementService.cancelReplacement(r.id); await reload(); navigate('replacements') }} onComplete={async (r) => { await replacementService.completeReplacement(r.id); await reload(); navigate('replacements') }} onArchive={async (r) => { await replacementService.archiveReplacement(r.id); await reload(); navigate('replacements') }} onRestore={async (r) => { await replacementService.restoreReplacement(r.id); await reload(); navigate('replacements') }} onAssign={async (r, coach) => { await replacementService.assignReplacementManually(r, coach); await reload() }} />
-  else content = <DashboardPage coaches={coaches} replacements={replacements} navigate={navigate} />
-  return <AppShell page={page} navigate={navigate} onSignOut={() => supabase.auth.signOut()}>{error && <div className="global-error">{error}<button onClick={() => setError('')}>×</button></div>}{content}</AppShell>
+  else if (page === 'settings') content = <SettingsPage settings={settings} onSave={async (fields) => { const saved = await settingsService.saveSettings(fields); setSettings({ ...settingsService.defaultSettings, ...saved }) }} />
+  else if (page === 'edit-replacement') content = <EditReplacementPage settings={settings} replacement={payload} onCancel={() => navigate('details', payload)} onSave={async (fields) => { await replacementService.updateReplacement(payload.id, fields); await reload(); navigate('details', { ...payload, ...fields }) }} />
+  else if (page === 'details') content = <ReplacementDetails settings={settings} replacement={replacements.find((item) => item.id === payload?.id) || payload} coaches={coaches} onBack={() => navigate('replacements')} onDuplicate={(r) => navigate('replacement', r)} onEdit={(r) => navigate('edit-replacement', r)} onRemind={async (r) => { const result = await replacementService.remindPendingRecipients(r); await reload(); return result }} onCancel={async (r) => { await replacementService.cancelReplacement(r.id); await reload(); navigate('replacements') }} onComplete={async (r) => { await replacementService.completeReplacement(r.id); await reload(); navigate('replacements') }} onArchive={async (r) => { await replacementService.archiveReplacement(r.id); await reload(); navigate('replacements') }} onRestore={async (r) => { await replacementService.restoreReplacement(r.id); await reload(); navigate('replacements') }} onAssign={async (r, coach) => { await replacementService.assignReplacementManually(r, coach); await reload() }} />
+  else content = <DashboardPage coaches={coaches} replacements={replacements} settings={settings} navigate={navigate} />
+  return <AppShell page={page} settings={settings} navigate={navigate} onSignOut={() => supabase.auth.signOut()}>{error && <div className="global-error">{error}<button onClick={() => setError('')}>×</button></div>}{content}</AppShell>
 }

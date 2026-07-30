@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { buildSms } from '../lib/format'
 import Notice from '../components/Notice'
 
-export default function EditReplacementPage({ replacement, onCancel, onSave }) {
+export default function EditReplacementPage({ replacement, settings, onCancel, onSave }) {
   const [form, setForm] = useState(() => ({
     venue: replacement.venue || '', address: replacement.address || '', replacement_date: replacement.replacement_date || '',
     start_time: replacement.start_time?.slice(0, 5) || '', end_time: replacement.end_time?.slice(0, 5) || '',
@@ -12,7 +12,7 @@ export default function EditReplacementPage({ replacement, onCancel, onSave }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
-  const message = buildSms(form)
+  const message = buildSms(form, settings?.sms_template)
 
   async function submit(event) {
     event.preventDefault()

@@ -4,8 +4,8 @@ import Notice from '../components/Notice'
 
 const empty = { venue: '', address: '', replacement_date: '', start_time: '', end_time: '', class_type: '', required_specialty: '', manager_name: '', manager_phone: '', comment: '' }
 
-export default function ReplacementPage({ coaches, duplicate, onSend, clearDuplicate }) {
-  const [form, setForm] = useState(() => duplicate ? { ...empty, ...duplicate, replacement_date: '' } : empty)
+export default function ReplacementPage({ coaches, settings, duplicate, onSend, clearDuplicate }) {
+  const [form, setForm] = useState(() => duplicate ? { ...empty, ...duplicate, replacement_date: '' } : { ...empty, venue: settings?.establishment_name || '', manager_name: settings?.manager_name || '', manager_phone: settings?.phone || '' })
   const [selected, setSelected] = useState([])
   const [filter, setFilter] = useState(duplicate?.required_specialty || '')
   const [loading, setLoading] = useState(false)
@@ -13,7 +13,7 @@ export default function ReplacementPage({ coaches, duplicate, onSend, clearDupli
   const active = coaches.filter((c) => c.is_active)
   const visible = useMemo(() => active.filter((c) => !filter || c.specialties?.includes(filter)), [active, filter])
   const specialties = [...new Set(active.flatMap((c) => c.specialties || []))].sort()
-  const message = buildSms(form)
+  const message = buildSms(form, settings?.sms_template)
   const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
   async function submit(e) {
     e.preventDefault(); setError('')
@@ -25,7 +25,7 @@ export default function ReplacementPage({ coaches, duplicate, onSend, clearDupli
   }
   return <div className="page"><header className="page-header"><div><p className="eyebrow">{duplicate ? 'Nouvelle demande dupliquée' : 'Nouvelle demande'}</p><h1>Créer un remplacement</h1><p>Renseignez le besoin puis choisissez les coachs à contacter.</p></div></header>
     <form onSubmit={submit}><section className="card form-section"><div className="section-title"><span className="step">1</span><div><h2>Le remplacement</h2><p>Informations essentielles de la séance</p></div></div><div className="form-grid">
-      <label>Établissement<input required value={form.venue} onChange={(e) => set('venue', e.target.value)} /></label><label>Adresse <span>(facultatif)</span><input value={form.address} onChange={(e) => set('address', e.target.value)} /></label>
+      <label>Établissement<input required list="establishment-locations" value={form.venue} onChange={(e) => { const venue = e.target.value; const location = (settings?.locations || []).find((item) => item.name === venue); set('venue', venue); if (location) set('address', location.address || '') }} /><datalist id="establishment-locations">{[settings?.establishment_name, ...(settings?.locations || []).map((item) => item.name)].filter(Boolean).filter((value, index, all) => all.indexOf(value) === index).map((name) => <option key={name} value={name} />)}</datalist></label><label>Adresse <span>(facultatif)</span><input value={form.address} onChange={(e) => set('address', e.target.value)} /></label>
       <label>Date<input required type="date" value={form.replacement_date} onChange={(e) => set('replacement_date', e.target.value)} /></label><div className="paired"><label>Début<input required type="time" value={form.start_time} onChange={(e) => set('start_time', e.target.value)} /></label><label>Fin<input required type="time" value={form.end_time} onChange={(e) => set('end_time', e.target.value)} /></label></div>
       <label>Type de cours<input required value={form.class_type} onChange={(e) => set('class_type', e.target.value)} placeholder="Pilates" /></label><label>Spécialité requise<select required value={form.required_specialty} onChange={(e) => { set('required_specialty', e.target.value); setFilter(e.target.value) }}><option value="">Choisir…</option>{specialties.map((s) => <option key={s}>{s}</option>)}</select></label>
       <label>Nom du responsable<input required value={form.manager_name} onChange={(e) => set('manager_name', e.target.value)} /></label><label>Téléphone de contact<input required type="tel" value={form.manager_phone} onChange={(e) => set('manager_phone', e.target.value)} /></label>

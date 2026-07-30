@@ -1,9 +1,9 @@
 import { formatDate } from '../lib/format'
 import { categoryLabels, getReplacementCategory } from '../lib/replacementView'
 
-export default function DashboardPage({ coaches, replacements, navigate }) {
+export default function DashboardPage({ coaches, replacements, settings, navigate }) {
   const active = coaches.filter((coach) => coach.is_active).length
-  const categorized = replacements.map((replacement) => ({ replacement, category: getReplacementCategory(replacement) }))
+  const categorized = replacements.map((replacement) => ({ replacement, category: getReplacementCategory(replacement, new Date(), Number(settings?.urgency_hours || 24)) }))
   const counts = categorized.reduce((result, item) => ({ ...result, [item.category]: (result[item.category] || 0) + 1 }), {})
   const actionItems = categorized.filter((item) => ['urgent', 'open'].includes(item.category)).slice(0, 5)
 

@@ -29,9 +29,9 @@ function ReplacementCard({ replacement, category, onDetails, onDuplicate }) {
   </article>
 }
 
-export default function ReplacementsPage({ replacements, onDetails, onDuplicate, navigate, initialFilter = 'all' }) {
+export default function ReplacementsPage({ replacements, settings, onDetails, onDuplicate, navigate, initialFilter = 'all' }) {
   const [filter, setFilter] = useState(initialFilter)
-  const categorized = useMemo(() => replacements.map((replacement) => ({ replacement, category: getReplacementCategory(replacement) })), [replacements])
+  const categorized = useMemo(() => replacements.map((replacement) => ({ replacement, category: getReplacementCategory(replacement, new Date(), Number(settings?.urgency_hours || 24)) })), [replacements, settings?.urgency_hours])
   const counts = useMemo(() => categorized.reduce((result, item) => ({ ...result, [item.category]: (result[item.category] || 0) + 1 }), {}), [categorized])
   const visible = filter === 'all' ? categorized : categorized.filter((item) => item.category === filter)
   const sorted = [...visible].sort((a, b) => {

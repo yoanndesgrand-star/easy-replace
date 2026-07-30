@@ -5,7 +5,7 @@ export function getReplacementDateTime(replacement) {
   return Number.isNaN(value.getTime()) ? null : value
 }
 
-export function getReplacementCategory(replacement, now = new Date()) {
+export function getReplacementCategory(replacement, now = new Date(), urgencyHours = 24) {
   const start = getReplacementDateTime(replacement)
   const isPast = start ? start.getTime() < now.getTime() : false
 
@@ -17,7 +17,7 @@ export function getReplacementCategory(replacement, now = new Date()) {
   if (['draft', 'sent'].includes(replacement.status)) {
     if (start) {
       const hoursUntilStart = (start.getTime() - now.getTime()) / 3_600_000
-      if (hoursUntilStart >= 0 && hoursUntilStart <= 24) return 'urgent'
+      if (hoursUntilStart >= 0 && hoursUntilStart <= urgencyHours) return 'urgent'
     }
     return 'open'
   }

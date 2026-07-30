@@ -7,7 +7,7 @@ function formatEventTime(value) {
   return new Date(value).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
-export default function ReplacementDetails({ replacement, coaches, onBack, onDuplicate, onEdit, onRemind, onCancel, onComplete, onArchive, onRestore, onAssign }) {
+export default function ReplacementDetails({ replacement, coaches, settings, onBack, onDuplicate, onEdit, onRemind, onCancel, onComplete, onArchive, onRestore, onAssign }) {
   const [reminding, setReminding] = useState(false)
   const [working, setWorking] = useState('')
   const [notice, setNotice] = useState(null)
@@ -18,7 +18,7 @@ export default function ReplacementDetails({ replacement, coaches, onBack, onDup
   ), [replacement])
 
   if (!replacement) return null
-  const category = getReplacementCategory(replacement)
+  const category = getReplacementCategory(replacement, new Date(), Number(settings?.urgency_hours || 24))
   const timeline = buildTimeline(replacement)
   const recipients = replacement.replacement_recipients || []
   const archived = Boolean(replacement.archived_at)

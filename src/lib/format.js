@@ -20,14 +20,28 @@ export const statusLabels = {
   pending: 'En attente', failed: 'Échec', accepted: 'Accepté', declined: 'Indisponible', closed: 'Déjà pourvu',
 }
 
-export function buildSms(form) {
+export function buildSms(form, template = '') {
   if (!form.replacement_date) return 'Complétez la date et les horaires pour afficher l’aperçu.'
   const day = formatDate(form.replacement_date, { weekday: 'long', day: 'numeric', month: 'long' })
-  const time = (v) => v?.slice(0, 5)?.replace(':', 'h')
-  const course = form.class_type ? ` pour un cours de ${form.class_type}` : ''
-  const contact = form.manager_name || form.manager_phone
-    ? ` Contact : ${form.manager_name || ''}${form.manager_name && form.manager_phone ? ' au ' : ''}${form.manager_phone || ''}.`
+  const time = (value) => value?.slice(0, 5)?.replace(':', 'h') || ''
+  const values = {
+    date: day,
+    debut: time(form.start_time),
+    fin: time(form.end_time),
+    etablissement: form.venue || 'à confirmer',
+    adresse: form.address || '',
+    cours: form.class_type || 'cours à confirmer',
+    responsable: form.manager_name || '',
+    telephone: form.manager_phone || '',
+    commentaire: form.comment?.trim() || '',
+  }
+  if (template?.trim()) {
+    return template.replace(/\{(date|debut|fin|etablissement|adresse|cours|responsable|telephone|commentaire)\}/g, (_, key) => values[key])
+      .replace(/\s+([.,;:!?])/g, '$1').replace(/\s{2,}/g, ' ').trim()
+  }
+  const contact = values.responsable || values.telephone
+    ? ` Contact : ${values.responsable}${values.responsable && values.telephone ? ' au ' : ''}${values.telephone}.`
     : ''
-  const note = form.comment ? ` ${form.comment.trim()}` : ''
-  return `Easy Replace — Remplacement disponible le ${day} de ${time(form.start_time)} à ${time(form.end_time)} à ${form.venue || 'confirmer'}${course}.${contact}${note}`.trim()
+  const note = values.commentaire ? ` ${values.commentaire}` : ''
+  return `Easy Replace — Remplacement disponible le ${day} de ${values.debut} à ${values.fin} à ${values.etablissement} pour un cours de ${values.cours}.${contact}${note}`.trim()
 }
