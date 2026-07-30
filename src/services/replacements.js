@@ -16,7 +16,7 @@ export async function listReplacements() {
 export async function createReplacement(form, coaches, message) {
   const { data: { user } } = await supabase.auth.getUser()
   const fields = {
-    venue: form.venue, address: form.address || null,
+    location_id: form.location_id || null, venue: form.venue, address: form.address || null,
     replacement_date: form.replacement_date, start_time: form.start_time, end_time: form.end_time,
     class_type: form.class_type, required_specialty: form.required_specialty,
     manager_name: form.manager_name, manager_phone: form.manager_phone,
@@ -135,7 +135,7 @@ export async function deleteReplacement(id) {
 }
 
 export async function updateReplacement(id, fields) {
-  const allowed = ['venue', 'address', 'replacement_date', 'start_time', 'end_time', 'class_type', 'required_specialty', 'manager_name', 'manager_phone', 'message']
+  const allowed = ['location_id', 'venue', 'address', 'replacement_date', 'start_time', 'end_time', 'class_type', 'required_specialty', 'manager_name', 'manager_phone', 'message']
   const payload = Object.fromEntries(allowed.filter((key) => Object.prototype.hasOwnProperty.call(fields, key)).map((key) => [key, fields[key] || null]))
   const { data, error } = await supabase.from('replacement_requests').update(payload).eq('id', id).in('status', ['draft', 'sent']).is('accepted_recipient_id', null).is('archived_at', null).select(selection).single()
   if (error) throw error

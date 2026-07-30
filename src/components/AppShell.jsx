@@ -1,6 +1,7 @@
 const links = [
   ['dashboard', 'Tableau de bord', '⌂'],
   ['coaches', 'Coachs', '♙'],
+  ['locations', 'Salles', '⌖'],
   ['replacement', 'Nouveau remplacement', '+'],
   ['replacements', 'Remplacements', '◷'],
   ['activity', 'Activité', '≋'],

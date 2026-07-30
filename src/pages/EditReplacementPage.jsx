@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { buildSms } from '../lib/format'
 import Notice from '../components/Notice'
 
-export default function EditReplacementPage({ replacement, settings, onCancel, onSave }) {
+export default function EditReplacementPage({ replacement, locations = [], settings, onCancel, onSave }) {
   const [form, setForm] = useState(() => ({
-    venue: replacement.venue || '', address: replacement.address || '', replacement_date: replacement.replacement_date || '',
+    location_id: replacement.location_id || '', venue: replacement.venue || '', address: replacement.address || '', replacement_date: replacement.replacement_date || '',
     start_time: replacement.start_time?.slice(0, 5) || '', end_time: replacement.end_time?.slice(0, 5) || '',
     class_type: replacement.class_type || '', required_specialty: replacement.required_specialty || '',
     manager_name: replacement.manager_name || '', manager_phone: replacement.manager_phone || '', comment: '',
@@ -28,8 +28,8 @@ export default function EditReplacementPage({ replacement, settings, onCancel, o
     <button className="back" onClick={onCancel}>← Annuler la modification</button>
     <header className="page-header"><div><p className="eyebrow">Modification</p><h1>Modifier le remplacement</h1><p>Les coachs déjà contactés ne recevront pas automatiquement un nouveau SMS.</p></div></header>
     <form onSubmit={submit}><section className="card form-section"><div className="section-title"><div><h2>Informations de la séance</h2><p>Modifiez uniquement les éléments nécessaires</p></div></div><div className="form-grid">
-      <label>Établissement<input required value={form.venue} onChange={(e) => set('venue', e.target.value)} /></label>
-      <label>Adresse <span>(facultatif)</span><input value={form.address} onChange={(e) => set('address', e.target.value)} /></label>
+      <label>Salle<select required value={form.location_id || ''} onChange={(e) => { const location = locations.find((item) => item.id === e.target.value); set('location_id', e.target.value); set('venue', location?.name || ''); set('address', location?.address || '') }}><option value="">Choisir…</option>{locations.filter((item) => item.is_active || item.id === form.location_id).map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select></label>
+      <label>Adresse<input readOnly value={form.address} /></label>
       <label>Date<input required type="date" value={form.replacement_date} onChange={(e) => set('replacement_date', e.target.value)} /></label>
       <div className="paired"><label>Début<input required type="time" value={form.start_time} onChange={(e) => set('start_time', e.target.value)} /></label><label>Fin<input required type="time" value={form.end_time} onChange={(e) => set('end_time', e.target.value)} /></label></div>
       <label>Type de cours<input required value={form.class_type} onChange={(e) => set('class_type', e.target.value)} /></label>

@@ -29,11 +29,13 @@ function ReplacementCard({ replacement, category, onDetails, onDuplicate }) {
   </article>
 }
 
-export default function ReplacementsPage({ replacements, settings, onDetails, onDuplicate, navigate, initialFilter = 'all' }) {
+export default function ReplacementsPage({ replacements, locations = [], settings, onDetails, onDuplicate, navigate, initialFilter = 'all' }) {
   const [filter, setFilter] = useState(initialFilter)
+  const [locationFilter, setLocationFilter] = useState('')
   const categorized = useMemo(() => replacements.map((replacement) => ({ replacement, category: getReplacementCategory(replacement, new Date(), Number(settings?.urgency_hours || 24)) })), [replacements, settings?.urgency_hours])
   const counts = useMemo(() => categorized.reduce((result, item) => ({ ...result, [item.category]: (result[item.category] || 0) + 1 }), {}), [categorized])
-  const visible = filter === 'all' ? categorized : categorized.filter((item) => item.category === filter)
+  const statusVisible = filter === 'all' ? categorized : categorized.filter((item) => item.category === filter)
+  const visible = locationFilter ? statusVisible.filter((item) => item.replacement.location_id === locationFilter || (!item.replacement.location_id && item.replacement.venue === locations.find((l) => l.id === locationFilter)?.name)) : statusVisible
   const sorted = [...visible].sort((a, b) => {
     const priority = { urgent: 0, open: 1, filled: 2, completed: 3, cancelled: 4, archived: 5 }
     if (priority[a.category] !== priority[b.category]) return priority[a.category] - priority[b.category]
@@ -51,7 +53,7 @@ export default function ReplacementsPage({ replacements, settings, onDetails, on
 
     <div className="replacement-toolbar">
       <div><h2>{filter === 'all' ? 'Toutes les demandes' : categoryLabels[filter]}</h2><p>{visible.length} remplacement{visible.length > 1 ? 's' : ''}</p></div>
-      <div className="filter-pills">{filters.map((value) => <button key={value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{value === 'all' ? 'Tous' : categoryLabels[value]}</button>)}</div>
+      <select className="location-filter-select" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}><option value="">Toutes les salles</option>{locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select><div className="filter-pills">{filters.map((value) => <button key={value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{value === 'all' ? 'Tous' : categoryLabels[value]}</button>)}</div>
     </div>
 
     {sorted.length ? <div className="replacement-grid">{sorted.map(({ replacement, category }) => <ReplacementCard key={replacement.id} replacement={replacement} category={category} onDetails={onDetails} onDuplicate={onDuplicate} />)}</div> : <section className="card empty"><strong>Aucun remplacement dans cette catégorie</strong><p>Les prochaines demandes apparaîtront ici.</p></section>}
