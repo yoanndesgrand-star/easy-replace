@@ -15,7 +15,7 @@ Chaque gérante crée son compte depuis l’application. Son prénom et son nom 
 
 ## SMS
 
-Sans `BREVO_API_KEY`, `/api/send-sms` simule chaque succès et ne contacte pas Brevo. Pour tester la fonction locale Vercel, utiliser `npx vercel dev` (la commande Vite seule ne sert pas les fonctions `/api`).
+Pour tester la fonction locale Vercel, définir `BREVO_API_KEY` dans l’environnement local puis utiliser `npx vercel dev` (la commande Vite seule ne sert pas les fonctions `/api`). Sans cette variable, la route renvoie une erreur de configuration et aucun envoi n’est simulé.
 
 Pour activer les SMS réels, créer une clé API v3 Brevo, activer/configurer les SMS transactionnels dans Brevo, vérifier que l’expéditeur `EasyReplace` est accepté dans les pays ciblés, puis ajouter `BREVO_API_KEY` uniquement comme variable serveur Vercel. Ne jamais la préfixer par `VITE_`.
 

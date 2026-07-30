@@ -48,7 +48,11 @@ export default function App() {
     const { request, recipients } = await replacementService.createReplacement(form, selected, message)
     const result = await replacementService.sendReplacement({ ...request, message }, recipients)
     await reload(); navigate('history')
-    window.setTimeout(() => window.alert(result.simulated ? 'Mode test — aucun SMS réel envoyé.' : `${result.sent} SMS envoyé(s).`), 50)
+    window.setTimeout(() => window.alert(
+      result.failed
+        ? `${result.sent} SMS envoyé(s), ${result.failed} échec(s). Consultez l’historique pour les détails.`
+        : `${result.sent} SMS envoyé(s).`,
+    ), 50)
   }
 
   if (!isSupabaseConfigured) return <div className="setup"><div className="brand"><span>ER</span><strong>Easy Replace</strong></div><h1>Configuration requise</h1><p>Copiez <code>.env.example</code> vers <code>.env.local</code>, puis renseignez l’URL et la clé publique anonyme Supabase.</p><p>Aucun secret Brevo n’est requis pour le mode test.</p></div>

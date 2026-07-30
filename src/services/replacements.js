@@ -29,23 +29,42 @@ export async function createReplacement(form, coaches, message) {
 }
 
 export async function sendReplacement(request, recipients) {
-  const response = await fetch('/api/send-sms', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      replacementId: request.id, message: request.message,
-      recipients: recipients.map((item) => ({ id: item.id, phone: item.phone_snapshot, name: item.coach_name_snapshot })),
-    }),
-  })
-  const result = await response.json()
-  if (!response.ok) throw new Error(result.error || 'Envoi impossible')
-  await Promise.all(result.details.map((item) => supabase.from('replacement_recipients').update({
+  if (!recipients.length) throw new Error('Sélectionnez au moins un destinataire.')
+  if (recipients.length > 250) throw new Error('Maximum 250 destinataires par envoi.')
+
+  const details = await Promise.all(recipients.map(async (item) => {
+    try {
+      const response = await fetch('/api/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          replacementId: request.id,
+          recipient: { id: item.id, phone: item.phone_snapshot, name: item.coach_name_snapshot },
+          message: request.message,
+          batchSize: recipients.length,
+        }),
+      })
+      const result = await response.json().catch(() => ({ success: false, error: 'Réponse serveur invalide.' }))
+      return {
+        id: item.id,
+        success: response.ok && result.success === true,
+        messageId: result.messageId || null,
+        error: response.ok && result.success === true ? null : result.error || 'Envoi impossible',
+      }
+    } catch {
+      return { id: item.id, success: false, messageId: null, error: 'Impossible de contacter le service SMS.' }
+    }
+  }))
+
+  await Promise.all(details.map((item) => supabase.from('replacement_recipients').update({
     sms_status: item.success ? 'sent' : 'failed',
     provider_message_id: item.messageId || null,
     error_message: item.error || null,
     sent_at: item.success ? new Date().toISOString() : null,
   }).eq('id', item.id)))
   await supabase.from('replacement_requests').update({ status: 'sent' }).eq('id', request.id)
-  return result
+  const sent = details.filter((item) => item.success).length
+  return { success: sent === details.length, sent, failed: details.length - sent, details }
 }
 
 export async function updateReplacementStatus(id, status) {
